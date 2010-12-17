@@ -1,0 +1,92 @@
+#! perl
+
+use FileHandle;
+
+# urxvt-pipe:  Extension to pipe screen display to external programs
+#
+# Author: Chip Camden <sterling@camdensoftware.com>
+#
+# Invoke as:
+#
+#     urxvt-pipe source|dest
+#
+# where
+#
+#     source	specifies the source of the text, and is any combination of the following letters:
+#		a = all lines, including scrollback
+#		s = selected text only
+#		v = all visible lines
+#		if more than one of the above are specified, then the first one that produces text
+#		will be used.
+#
+#     dest	specifies a command to which the text will be piped.  The command does not run
+#		in a shell or even a terminal, so if it needs one or both, you must specify them.
+#
+
+sub on_view_change {
+  my ($self, $offset) = @_;
+  $self->{view_offset} = $offset;
+}
+
+sub on_scroll_back {
+  my ($self, $lines, $saved) = @_;
+  $self->{view_offset} = 0;
+}
+
+sub on_user_command {
+  my ($self, $cmd) = @_;
+  if ($cmd =~ s/^urxvt-pipe\s+([asv]+)\s*\|\s*(.+)//) {
+    my $dest = $2;
+    my @sources = split //, $1;
+    my $text = ();
+    my $source;
+    while (($source = shift @sources) &&
+           !($text = $self->{"get_$source"}->()))
+    {}
+    if ($text)
+    {
+      open(my $pipe, "|-", $dest);
+      $pipe->autoflush(1);
+      print $pipe  $text;
+      close $pipe;
+    }
+  }
+  ()
+}
+
+sub on_start {
+  my ($self) = @_;
+
+  ($self->{name} = __PACKAGE__) =~ s/.*:://;
+  $self->{name} =~ tr/_/-/;
+  $self->{get_a} = sub {
+      my $text = '';
+      for (($self->top_row)..($self->nrow - 1)) {
+	my $rtext = $self->special_decode($self->ROW_t($_));
+	$rtext =~ s/\s+$//;
+        $text .= $rtext . "\n";
+      }
+      $text =~ s/\A\n+//s;
+      $text
+  };
+  $self->{get_s} = sub {
+      my ($brow, $bcol) = $self->selection_beg();
+      my ($erow, $ecol) = $self->selection_end();
+      my $text = '';
+      $text = $self->selection() if ($ecol > $bcol) || ($erow > $brow);
+      $text
+  };
+  $self->{get_v} = sub {
+      my $text = '';
+      my $offset = $self->{view_offset};
+      for (0..($self->nrow - 1)) {
+	my $row = $_ + $offset;
+	my $rtext = $self->special_decode($self->ROW_t($row));
+	$rtext =~ s/\s+$//;
+        $text .= $rtext . "\n";
+      }
+      $text
+  };
+}
+
+# vim:set sw=3 sts=3 et:

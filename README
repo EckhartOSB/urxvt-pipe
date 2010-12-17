@@ -1,0 +1,71 @@
+NAME	urxvt-pipe
+
+SITE	http://chipstips.com/?tag=plurxvtpipe
+	http://bitbucket.org/sterlingcamden/urxvt-pipe
+
+AUTHOR	Chip Camden
+
+DATE	December, 2010
+
+DESCRIPTION
+
+Perl extension for rxvt-unicode (aka urxvt) to enable the user to pipe
+the terminal window's display to some other program.  You can pipe the
+selected text, the text of the visible window, or all text (including
+scrollback).
+
+INSTALLATION
+
+See the man page for urxvtperl(3) for a full discussion of Perl
+extensions.  Enable this extension using one of the methods documented
+there.  For example, you could place the script urxvt-pipe in
+/usr/local/lib/urxvt/perl, then add the following to .Xdefaults:
+
+URxvt.perl-ext: default,urxvt-pipe
+URxvt.keysym.C-0x005c:    perl:urxvt-pipe sa|farg 'urxvt -e vim %s'
+URxvt.keysym.A-0x005c:    perl:urxvt-pipe sv|farg 'urxvt -e vim %s'
+
+This creates two ways to pipe the terminal window display to vim in another
+terminal window:  Ctrl+\ will send any selected text, or all text if none is
+selected.  Alt+\ will send either the selected text, or only the visible text
+if none is selected.  The former is useful for capturing a lot of text that
+has scrolled by, while the latter is useful for capturing sessions from an
+ncurses application.  Of course, you aren't limited to using vim.
+
+
+SYNTAX
+
+As you can see, the user command requires special arguments to indicate
+what text should be piped to whom.  The general form is:
+
+urxvt-pipe source | destination
+
+where
+
+source		is a combination of any of the three following letters:
+
+		a = all text in the window, including scrollback
+		s = selected text
+		v = all visible text in the window
+
+destination	is a command to which the text will be piped.
+
+
+OPERATION
+
+The letters in source are used left-to-right until one of them produces some
+text.  Thus, "sa" will attempt to find selected text first, and if none is
+selected it will use all text instead.  If no text is found in any of the
+sources specified, then nothing happens.
+
+The destination is opened via a pipe from Perl, so if the program so named
+requires a terminal window or a shell, then you must provide for that in the
+command.  Because text will be piped to the stdin of the command, you may
+need to use the provided shell script farg to copy piped text to a file that
+is then passed as an argument.  Both of these techniques are shown in the
+vim example above.
+
+
+RESOURCES
+
+This extension does not query any X11 resources at this time.
