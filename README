@@ -65,6 +65,8 @@ need to use the provided shell script farg to copy piped text to a file that
 is then passed as an argument.  Both of these techniques are shown in the
 vim example above.
 
+The text will be piped in utf8 encoding.
+
 
 RESOURCES
 

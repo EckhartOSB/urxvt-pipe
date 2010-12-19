@@ -45,7 +45,7 @@ sub on_user_command {
     {}
     if ($text)
     {
-      open(my $pipe, "|-", $dest);
+      open(my $pipe, "|-:utf8", $dest);
       $pipe->autoflush(1);
       print $pipe  $text;
       close $pipe;
