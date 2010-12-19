@@ -23,16 +23,6 @@ use FileHandle;
 #		in a shell or even a terminal, so if it needs one or both, you must specify them.
 #
 
-sub on_view_change {
-  my ($self, $offset) = @_;
-  $self->{view_offset} = $offset;
-}
-
-sub on_scroll_back {
-  my ($self, $lines, $saved) = @_;
-  $self->{view_offset} = 0;
-}
-
 sub on_user_command {
   my ($self, $cmd) = @_;
   if ($cmd =~ s/^urxvt-pipe\s+([asv]+)\s*\|\s*(.+)//) {
@@ -78,7 +68,7 @@ sub on_start {
   };
   $self->{get_v} = sub {
       my $text = '';
-      my $offset = $self->{view_offset};
+      my $offset = $self->view_start;
       for (0..($self->nrow - 1)) {
 	my $row = $_ + $offset;
 	my $rtext = $self->special_decode($self->ROW_t($row));
